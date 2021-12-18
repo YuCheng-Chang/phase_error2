@@ -62,9 +62,7 @@ while 1
             disp('sample: ')
             fprintf('%.2f\t\n',sample);
             chunk = allvec(1,sample-window+1:sample);
-            chunk = bandpass(chunk,fpass,samplerate);
             phase_error_chunk = allvec(1,sample-window+1:sample-window+phase_error_window);%用來預測的chunk 長度比window短
-            phase_error_chunk = bandpass(phase_error_chunk,fpass,samplerate);
             error_coeffs = aryule(phase_error_chunk(edge+1:end-edge), p); 
             error_coeffs = -error_coeffs(end:-1:2);
             error_nextvalues = zeros(1,p+forwardsample);
