@@ -14,9 +14,11 @@ idx = downsample;
 count0 = 0;
 count1 = 1;
 count2 = 1;
+
 x0 = (1:phase_error_window-edge+forwardsample)*(1/samplerate);
 x1 = (phase_error_window-edge:phase_error_window-edge+forwardsample)*(1/samplerate);
 x2 = (1:window)*(1/samplerate);
+
 x3 = 1:15;
 %
 allvec = nan(1,1000000);%用來存lsl的
