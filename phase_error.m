@@ -90,6 +90,7 @@ while 1
     end
 
     if sample == 6300
+        n_trial=sample/window;
         break
     end
     
@@ -119,16 +120,63 @@ for i = 1:9
     hold off;
 end
 
-
-
-
-
-
-
-
 % for x = 1:1
 %     figure(x)
 %     plot(x2,op_phase(x,:),'b');
 %     hold;
 % end
+%% plv heatmap
+now_time=0.8;
+max_future_time=0.5;
+past_windows=0.02:0.02:now_time;%in secs
+future_windows=0.02:0.02:max_future_time;%in secs
+PLVmap=nan(numel(past_windows),numel(future_windows));
+idx1=1;
+idx2=1;
+for past_window=past_windows
+    idx2=1;
+    for future_window=future_windows
+        past_samples=round(past_window*samplerate);
+        future_samples=round(future_window*samplerate);
+        pastEEG=true_phase(1:n_trial,now_time*samplerate-past_samples+1:now_time*samplerate);
+        real_futureEEG=true_phase(1:n_trial,now_time*samplerate+1:...
+            now_time*samplerate+future_samples);
+        %find the estimate of parameters(peak frequency and current phase)
+        L=4096;
+        pastFFT=fft(pastEEG,L,2);
+        [~,fidx] = max(abs(pastFFT),[],2);
+        peak_freq=samplerate*(fidx-1)/L;
+        now_phase=angle(hilbert(pastEEG'))';
+        now_phase=now_phase(:,end);
+        %make prediction using cosine wave
+        predicted_futureEEG=nan(n_trial,future_samples);
+        for i=1:n_trial
+            predicted_futureEEG(i,:)=cos(2*pi*peak_freq(i)*(1:future_samples)+now_phase(i));
+        end
+        fprintf('predicted_futureEEG:');
+        print_arr(size(predicted_futureEEG));
+        fprintf('real_futureEEG:');
+        print_arr(size(real_futureEEG));
+        eegData=[predicted_futureEEG';real_futureEEG'];
+        filtSpec.order = 50;
+        filtSpec.range = fpass; %Hz
+        eeg1=reshape(predicted_futureEEG',1,numel(predicted_futureEEG));
+        eeg2=reshape(real_futureEEG',1,numel(real_futureEEG));
+        plv = my_eegPLV(eeg1,eeg2, samplerate, filtSpec);
+        PLVmap(idx1,idx2)=plv;
+        idx2=idx2+1;
+    end
+    idx1=idx1+1;
+end
+xvalues = future_windows;
+yvalues = past_windows;
+figure;
+h = heatmap(xvalues,yvalues,PLVmap);
 
+h.Title = 'PLV in alpha band';
+h.XLabel = 'future window';
+h.YLabel = 'past window';
+        
+        
+        
+        
