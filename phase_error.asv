@@ -125,13 +125,16 @@ end
 %     plot(x2,op_phase(x,:),'b');
 %     hold;
 % end
-%% plv heatmap
+%% plv heatmap fft
 now_time=0.8;
 max_future_time=0.5;
 past_windows=0.02:0.02:now_time;%in secs
 future_windows=0.02:0.02:max_future_time;%in secs
 PLVmap=nan(numel(past_windows),numel(future_windows));
+idx1=1;
+idx2=1;
 for past_window=past_windows
+    idx2=1;
     for future_window=future_windows
         past_samples=round(past_window*samplerate);
         future_samples=round(future_window*samplerate);
@@ -154,14 +157,73 @@ for past_window=past_windows
         print_arr(size(predicted_futureEEG));
         fprintf('real_futureEEG:');
         print_arr(size(real_futureEEG));
-        eegData=[predicted_futureEEG';real_futureEEG'];
+        
         filtSpec.order = 50;
         filtSpec.range = fpass; %Hz
-        plv = my_eegPLV(eegData, samplerate, filtSpec);
-        PLVmap(past_window,future_)
+        eeg1=reshape(predicted_futureEEG',1,numel(predicted_futureEEG));
+        eeg2=reshape(real_futureEEG',1,numel(real_futureEEG));
+        plv = my_eegPLV(eeg1,eeg2, samplerate, filtSpec);
+        PLVmap(idx1,idx2)=plv;
+        idx2=idx2+1;
     end
+    idx1=idx1+1;
 end
+xvalues = future_windows;
+yvalues = past_windows;
+figure;
+h = heatmap(xvalues,yvalues,PLVmap);
+
+h.Title = 'PLV in alpha band';
+h.XLabel = 'future window(sec)';
+h.YLabel = 'past window(sec)';
+%% plv heatmap hilbert
+now_time=0.8;
+max_future_time=0.5;
+ar_windows=0.02:0.02:0.3;%in secs;ar_order/samplerate
+future_windows=0.02:0.02:max_future_time;%in secs
+PLVmap=nan(numel(ar_windows),numel(future_windows));
+idx1=1;
+idx2=1;
+for past_window=ar_windows
+    idx2=1;
+    for future_window=future_windows
+        p=round(past_window*samplerate);%ar order
+        future_samples=round(future_window*samplerate);
+        pastEEG=true_phase(1:n_trial,1:now_time*samplerate);
+        real_futureEEG=true_phase(1:n_trial,now_time*samplerate+1:...
+            now_time*samplerate+future_samples);
+        %ar prediction
+        error_coeffs = aryule(pastEEG', p); 
+        error_coeffs = -error_coeffs(1:n_trial,end:-1:2);
+        predicted_futureEEG = zeros(n_trial,p+future_samples);
+        predicted_futureEEG(1:n_trial,1:p) = pastEEG(1:n_trial,end-p+1:end);
+        for i = 1:future_samples
+            %預測出的資料%(n_trial x p)(n_trial x p)
+            predicted_futureEEG(1:n_trial,p+i) =sum( error_coeffs.*...
+                predicted_futureEEG(1:n_trial,i:p+i-1),2); 
+        end
+        predicted_futureEEG=predicted_futureEEG(:,p+1:end);
+        fprintf('predicted_futureEEG:');
+        print_arr(size(predicted_futureEEG));
+        fprintf('real_futureEEG:');
+        print_arr(size(real_futureEEG));
         
-        
-        
+        filtSpec.order = 50;
+        filtSpec.range = fpass; %Hz
+        eeg1=reshape(predicted_futureEEG',1,numel(predicted_futureEEG));
+        eeg2=reshape(real_futureEEG',1,numel(real_futureEEG));
+        plv = my_eegPLV(eeg1,eeg2, samplerate, filtSpec);
+        PLVmap(idx1,idx2)=plv;
+        idx2=idx2+1;
+    end
+    idx1=idx1+1;
+end
+xvalues = future_windows;
+yvalues = past_windows;
+figure;
+h = heatmap(xvalues,yvalues,PLVmap);
+
+h.Title = 'PLV in alpha band';
+h.XLabel = 'future window(sec)';
+h.YLabel = 'ar window(sec)';     
         

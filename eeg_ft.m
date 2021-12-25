@@ -13,6 +13,7 @@ fs = 500;
 n = 500;
 %hilsample = 0;
 p = 32;
+fpass=[8,13];%passband
 phase_idx = 1;
 idx = downsample;
 x0 = (1:window)*(1/eegsample);
@@ -52,7 +53,9 @@ while 1
             disp('sample: ')
             fprintf('%.2f\t\n',sample);
             chunk = allvec(1,sample-window+1:sample);
+            chunk = bandpass(chunk,fpass,samplerate);
             phase_error_chunk = allvec(1,sample-window+1:sample-window+ps_window);
+            phase_error_chunk = bandpass(phase_error_chunk,fpass,samplerate);
             Xf = fft(phase_error_chunk,4096);
             true_phase = angle(hilbert(phase_error_chunk));
             phase_now = true_phase(ps_window);
