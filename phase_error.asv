@@ -162,6 +162,8 @@ for past_window=past_windows
         filtSpec.range = fpass; %Hz
         eeg1=reshape(predicted_futureEEG',1,numel(predicted_futureEEG));
         eeg2=reshape(real_futureEEG',1,numel(real_futureEEG));
+        plv=0;
+        for trial=1:n_trial
         plv = my_eegPLV(eeg1,eeg2, samplerate, filtSpec);
         PLVmap(idx1,idx2)=plv;
         idx2=idx2+1;
@@ -219,7 +221,7 @@ for past_window=ar_windows
     idx1=idx1+1;
 end
 xvalues = future_windows;
-yvalues = past_windows;
+yvalues = ar_windows;
 figure;
 h = heatmap(xvalues,yvalues,PLVmap);
 

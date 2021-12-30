@@ -160,9 +160,11 @@ for past_window=past_windows
         
         filtSpec.order = 50;
         filtSpec.range = fpass; %Hz
-        eeg1=reshape(predicted_futureEEG',1,numel(predicted_futureEEG));
-        eeg2=reshape(real_futureEEG',1,numel(real_futureEEG));
-        plv = my_eegPLV(eeg1,eeg2, samplerate, filtSpec);
+        plv=0;
+        for trial=1:n_trial
+            plv=plv+ my_eegPLV(predicted_futureEEG(trial,:),real_futureEEG(trial,:), samplerate, filtSpec);
+        end
+        plv=plv/n_trial;
         PLVmap(idx1,idx2)=plv;
         idx2=idx2+1;
     end
@@ -210,9 +212,11 @@ for past_window=ar_windows
         
         filtSpec.order = 50;
         filtSpec.range = fpass; %Hz
-        eeg1=reshape(predicted_futureEEG',1,numel(predicted_futureEEG));
-        eeg2=reshape(real_futureEEG',1,numel(real_futureEEG));
-        plv = my_eegPLV(eeg1,eeg2, samplerate, filtSpec);
+        plv=0;
+        for trial=1:n_trial
+            plv=plv+ my_eegPLV(predicted_futureEEG(trial,:),real_futureEEG(trial,:), samplerate, filtSpec);
+        end
+        plv=plv/n_trial;
         PLVmap(idx1,idx2)=plv;
         idx2=idx2+1;
     end
