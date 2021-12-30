@@ -230,4 +230,40 @@ h = heatmap(xvalues,yvalues,PLVmap);
 h.Title = 'PLV in alpha band';
 h.XLabel = 'future window(sec)';
 h.YLabel = 'ar window(sec)';     
+%% gradient approach to find peaks
+
+figure;
+% predicion is the predicted target location(unit: sample)
+
+for i=1:n_trial
+    %use the peak nearest to 0.8s as now time
+    now_time=0.8;
+    pastEEG=true_phase(i,1:now_time*samplerate);
+    pastEEG=movmean(pastEEG,9);
+    targeted_phase=find_target_phase(pastEEG);
+    k = find(targeted_phase==2,1,'last');
+    now_time=k/samplerate;
+    
+    pastEEG=true_phase(i,1:now_time*samplerate);
+    pastEEG=movmean(pastEEG,9);
+    futureEEG=true_phase(i,now_time*samplerate+1:end);
+    past_time_axis=(1:now_time*samplerate)/samplerate-now_time;
+    future_time_axis=(now_time*samplerate+1:window)/samplerate-now_time;
+
+    subplot(3,3,i);
+    plot(past_time_axis,pastEEG,'b');
+    hold on;
+    plot(future_time_axis,futureEEG,'r');
+    targeted_phase=find_target_phase(pastEEG);
+    scatter(past_time_axis(targeted_phase==2),pastEEG(targeted_phase==2),'green');
+    scatter(0,pastEEG(end),'green');
+    [prediction,target_intervals] = predict_targets(pastEEG',2,0.5*samplerate,3,true);
+    fprintf('trial %i\n',i);
+    disp(target_intervals);
+    disp('-----------------------------');
+    plot(future_time_axis(prediction==true),futureEEG(prediction==true),'*','MarkerEdgeColor','black');
+    xline(0,'k--',{'now'});
+    hold off;
+end
+
         

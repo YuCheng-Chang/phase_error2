@@ -1,15 +1,24 @@
-function [prediction,target_intervals] = predict_targets(epochs,target_val,predict_len,ord)
+function [prediction,target_intervals] = predict_targets(epochs,target_val,predict_len,ord,varargin)
 %FIND_PEAK_INTERVAL Summary of this function goes here
 %   Detailed explanation goes here
 %   target_val can be 1, 2, 3, 4, indicating 0, 90, 180, 270 deg
 %   respectively
-%   epochs: time x channel
+%   epochs: time x trial
+include_last=false;
+if ~isempty(varargin)
+    include_last=varargin{1};
+end
 targets=nan(size(epochs));
 for i=1:size(targets,2)
     targets(:,i)=find_target_phase(epochs(:,i).');
 end
 
 targets=targets==target_val;
+if include_last
+    targets(end,:)=true;
+end
+
+
 %chnnel number
 M=size(epochs,2);
 prediction=false(predict_len,M);
